@@ -1,3 +1,5 @@
+import { wrapToVdom } from './util';
+
 /**
  * 创建 React 元素也就是虚拟DOM的工厂方法
  * @param {*} type DOM 的类型
@@ -10,9 +12,10 @@ function createElement(type, config, children) {
 
   // 2. 如果参数数量大于三个，说明不止一个儿子
   if (arguments.length > 3) {
-    props.children = Array.prototype.slice.call(arguments, 2);
+    props.children = Array.prototype.slice.call(arguments, 2).map(wrapToVdom);
   } else {
-    props.children = children;
+    // 没有儿子或者只有一个儿子
+    props.children = wrapToVdom(children);
   }
 
   return {
