@@ -6,8 +6,6 @@ function createRoot(container) {
   return {
     render(reactElement) {
       const domElement = renderElement(reactElement);
-      console.log(domElement);
-
       container.appendChild(domElement);
     },
   };
@@ -59,11 +57,8 @@ function renderElement(element) {
   const children = Array.isArray(props.children)
     ? props.children
     : [props.children];
-  // console.log(children);
 
   children.forEach((child) => {
-    // console.log(domElement, renderElement(child));
-
     // 把每个儿子都从虚拟  DOM 变成真实 DOM, 并插入到父节点里面
     console.log(domElement, renderElement(child));
 
