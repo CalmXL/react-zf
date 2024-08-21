@@ -1,0 +1,43 @@
+{
+  "type": "div",
+  "props": {
+    "style": {
+      "color": "pink"
+    },
+    "className": "container",
+    "children": [
+      "hello",
+      {
+        "type": "span",
+        "props": {
+          "style": {
+            "color": "orange"
+          },
+          "children": "world"
+        }
+      }
+    ]
+  }
+}
+
+// {
+//   "type": "div",
+//   "props": {
+//     "style": {
+//       "color": "pink"
+//     },
+//     "className": "container",
+//     "children": [
+//       "hello",
+//       {
+//         "type": "span",
+//         "props": {
+//           "style": {
+//             "color": "orange"
+//           },
+//           "children": "world"
+//         }
+//       }
+//     ]
+//   }
+// }
