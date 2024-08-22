@@ -6,16 +6,25 @@ class ClassComponent extends React.Component {
     console.log('react 父节点在冒泡阶段执行');
   }
 
-  childBubble() {
+  childBubble(event) {
     console.log('react 子节点在冒泡阶段执行');
+    event.stopPropagation();
   }
 
-  parentCapture() {
+  parentCapture(event) {
+    // 阻止事件传播
     console.log('react 父节点在捕获阶段执行');
+    // event.stopPropagation();
   }
 
   childCapture() {
     console.log('react 子节点在捕获阶段执行');
+  }
+
+  clickLink(event) {
+    console.log('clickLink');
+    // 阻止 a 标签默认跳转行为
+    event.preventDefault();
   }
 
   render() {
@@ -30,6 +39,9 @@ class ClassComponent extends React.Component {
           onClickCapture={this.childCapture}>
           click
         </button>
+        <a href="http://www.baidu.com" onClick={this.clickLink}>
+          baidu
+        </a>
       </div>
     );
   }
