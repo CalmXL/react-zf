@@ -36,7 +36,6 @@ class ClassComponent extends React.Component {
 }
 
 const element = <ClassComponent />;
-console.log(element);
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(element);

@@ -5,6 +5,7 @@ import { setupEventDelegation } from './event';
 /**
  * 创建 DOM 容器
  * @param {*} container
+ * @returns 返回一个 render 方法用于绑定视图
  */
 function createRoot(container) {
   return {
@@ -17,18 +18,35 @@ function createRoot(container) {
   };
 }
 
+/**
+ *
+ * @param {*} rootVdom 虚拟 dom
+ * @param {*} container 根容器
+ * @returns
+ */
 function mountVdom(rootVdom, container) {
   // 虚拟DOM -> 真实DOM
   const domElement = createDOMElement(rootVdom);
   if (!domElement) return;
+  // 将真实虚拟dom转换为真实DOM， 挂载到 根容器上
   container.appendChild(domElement);
 }
 
+/**
+ * 创建文本节点
+ * @param {*} vdom
+ * @returns
+ */
 function createDOMElementFromTextComponent(vdom) {
   const { props } = vdom;
   return document.createTextNode(props);
 }
 
+/**
+ * 类组件 -> dom
+ * @param {*} vdom
+ * @returns dom
+ */
 function createDOMElementFromClassComponent(vdom) {
   const { type, props } = vdom;
 
@@ -39,6 +57,11 @@ function createDOMElementFromClassComponent(vdom) {
   return createDOMElement(classInstance);
 }
 
+/**
+ * 函数组件 -> dom
+ * @param {*} vdom
+ * @returns
+ */
 function createDOMElementFromFunctionComponent(vdom) {
   const { type, props } = vdom;
   // 把属性对象传入函数组件，返回一个 react 元素
@@ -47,9 +70,12 @@ function createDOMElementFromFunctionComponent(vdom) {
   return createDOMElement(renderVdom);
 }
 
+/**
+ * 创建真实DOM,并挂载属性和子节点
+ * @param {*} vdom
+ * @returns
+ */
 function createDOMElementFromNativeComponent(vdom) {
-  console.log(vdom);
-
   const { type, props } = vdom;
 
   // 先根据类型创建真实 DOM
@@ -58,12 +84,15 @@ function createDOMElementFromNativeComponent(vdom) {
   updateProps(domElement, {}, props);
   // 挂载子节点
   mountChildren(vdom, domElement);
-
   // 格式化 children 为数组
-
   return domElement;
 }
 
+/**
+ * 挂载子节点
+ * @param {*} vdom
+ * @param {*} domElement
+ */
 function mountChildren(vdom, domElement) {
   const { props } = vdom;
   const children = wrapToArray(props?.children);
@@ -80,8 +109,6 @@ function mountChildren(vdom, domElement) {
  * @param {*} newProps    新属性
  */
 function updateProps(domElement, oldProps = {}, newProps) {
-  console.log(domElement, newProps);
-
   Object.keys(newProps).forEach((name) => {
     if (name === 'children') {
       return;
@@ -103,8 +130,8 @@ function updateProps(domElement, oldProps = {}, newProps) {
  */
 function createDOMElement(vdom) {
   if (isUndefiend(vdom)) return null;
-
   const { type, props } = vdom;
+  console.log(type);
 
   // 虚拟dom 为文本
   if (type === REACT_TEXT) {
