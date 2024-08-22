@@ -116,6 +116,14 @@ function updateProps(domElement, oldProps = {}, newProps) {
 
     if (name === 'style') {
       Object.assign(domElement.style, newProps.style);
+    } else if (name.startsWith('on')) {
+      // 我们在 domElement 添加一个自定义属性 reactEvents 用来存放 React 事件回调
+      if (isUndefiend(domElement.reactEvents)) {
+        domElement.reactEvents = {};
+      }
+      // domElement.reactEvents[onClick] => 对应监听函数
+      // domElement.reactEvents[onClickCapture] =>
+      domElement.reactEvents[name] = newProps[name];
     } else {
       // TODO 暂时不处理 事件
       domElement[name] = newProps[name];
@@ -131,7 +139,6 @@ function updateProps(domElement, oldProps = {}, newProps) {
 function createDOMElement(vdom) {
   if (isUndefiend(vdom)) return null;
   const { type, props } = vdom;
-  console.log(type);
 
   // 虚拟dom 为文本
   if (type === REACT_TEXT) {
