@@ -1,4 +1,5 @@
 import { wrapToVdom } from './util';
+import { createDOMElement } from './react-dom/client';
 
 /**
  * 创建 React 元素也就是虚拟DOM的工厂方法
@@ -7,6 +8,8 @@ import { wrapToVdom } from './util';
  * @param {*} children 儿子们
  */
 function createElement(type, config, children) {
+  console.log(type, config, children);
+
   // 1. 创建 props 对象
   const props = { ...config };
 
@@ -32,6 +35,31 @@ class Component {
   constructor(props) {
     // 收到的属性对象保存在自己的实例上
     this.props = props;
+  }
+
+  setState(partialState) {
+    // 合并新老状态
+    this.state = {
+      ...this.state,
+      ...partialState,
+    };
+
+    this.forceUpdate();
+  }
+
+  forceUpdate() {
+    // 重新调用 render 方法,计算新的虚拟 DOM, 再创建新的真实DOM,替换老的
+    const renderVdom = this.render();
+    // 创建真实 DOM
+    const newDOMElement = createDOMElement(renderVdom);
+    // 替换掉老的真实 DOM, 需要老的 DOM 和 DOM 父节点
+    const oldDOMElement = this.oldRenderVdom.domElement;
+    // 获取父节点
+    const parentDOM = oldDOMElement.parentNode;
+    // 替换新节点
+    parentDOM.replaceChild(newDOMElement, oldDOMElement);
+    // 最后更新 oldRenderVdom
+    this.oldRenderVdom = renderVdom;
   }
 }
 

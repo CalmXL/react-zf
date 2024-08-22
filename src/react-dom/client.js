@@ -13,7 +13,7 @@ function createRoot(container) {
       mountVdom(rootVdom, container);
 
       // 设置事件代理
-      setupEventDelegation(container);
+      // setupEventDelegation(container);
     },
   };
 }
@@ -49,10 +49,12 @@ function createDOMElementFromTextComponent(vdom) {
  */
 function createDOMElementFromClassComponent(vdom) {
   const { type, props } = vdom;
-
-  // 类组件，把属性传递给类组件的构造函数，调用 render 方法返回要渲染的虚拟 DOM
-  const classInstance = new type(props).render();
-
+  // 类组件，把属性传递给类组件的构造函数，
+  const classInstance = new type(props);
+  // 调用实例上的 render 方法返回要渲染的虚拟 DOM
+  const renderVdom = classInstance.render();
+  // 让类的实力的 oldRenderVdom 属性指向它调用的renderVdom
+  classInstance.oldRenderVdom = renderVdom;
   // 把虚拟DOM 传递给 createDOMElement 返回真实 DOM
   return createDOMElement(classInstance);
 }
@@ -84,7 +86,8 @@ function createDOMElementFromNativeComponent(vdom) {
   updateProps(domElement, {}, props);
   // 挂载子节点
   mountChildren(vdom, domElement);
-  // 格式化 children 为数组
+
+  vdom.domElement = domElement;
   return domElement;
 }
 
@@ -97,7 +100,7 @@ function mountChildren(vdom, domElement) {
   const { props } = vdom;
   const children = wrapToArray(props?.children);
   children.forEach((childVdom) => {
-    // 把每个儿子都从虚拟  DOM 变成真实 DOM, 并插入到父节点里面
+    // 把每个儿子都从虚拟 DOM 变成真实 DOM, 并插入到父节点里面
     mountVdom(childVdom, domElement);
   });
 }
@@ -125,7 +128,6 @@ function updateProps(domElement, oldProps = {}, newProps) {
       // domElement.reactEvents[onClickCapture] =>
       domElement.reactEvents[name] = newProps[name];
     } else {
-      // TODO 暂时不处理 事件
       domElement[name] = newProps[name];
     }
   });

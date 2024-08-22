@@ -89,3 +89,5 @@ React 中的合成事件 (SyntheticEvent) 是为了解决跨浏览器一致性�
 
 react17 之前合成事件是委托给了文档对象
 react18 之后委托给了 root 根节点
+
+### 6. setState 是同步的还是异步的?
