@@ -13,7 +13,7 @@ function createRoot(container) {
       mountVdom(rootVdom, container);
 
       // 设置事件代理
-      // setupEventDelegation(container);
+      setupEventDelegation(container);
     },
   };
 }
@@ -51,12 +51,14 @@ function createDOMElementFromClassComponent(vdom) {
   const { type, props } = vdom;
   // 类组件，把属性传递给类组件的构造函数，
   const classInstance = new type(props);
+  // 让类组件的虚拟DOM的 classInstance
+  vdom.classInstance = classInstance;
   // 调用实例上的 render 方法返回要渲染的虚拟 DOM
   const renderVdom = classInstance.render();
-  // 让类的实力的 oldRenderVdom 属性指向它调用的renderVdom
+  // 让类的实例的 oldRenderVdom 属性指向它调用的renderVdom
   classInstance.oldRenderVdom = renderVdom;
   // 把虚拟DOM 传递给 createDOMElement 返回真实 DOM
-  return createDOMElement(classInstance);
+  return createDOMElement(renderVdom);
 }
 
 /**
@@ -68,6 +70,9 @@ function createDOMElementFromFunctionComponent(vdom) {
   const { type, props } = vdom;
   // 把属性对象传入函数组件，返回一个 react 元素
   const renderVdom = type(props);
+  // 在获取到函数组件的返回的虚拟 DOM 之后,记录一下
+  // 让当前的函数组件的虚拟 dom 的 oldRenderVdom
+  vdom.oldRenderVdom = renderVdom;
   // 把函数组件返回的 react 元素传递给 createDOMElement, 创建真实 DOM
   return createDOMElement(renderVdom);
 }
@@ -138,7 +143,7 @@ function updateProps(domElement, oldProps = {}, newProps) {
  * @param {*} element 虚拟DOM
  * @return 真实 DOM
  */
-function createDOMElement(vdom) {
+export function createDOMElement(vdom) {
   if (isUndefiend(vdom)) return null;
   const { type, props } = vdom;
 
@@ -156,6 +161,31 @@ function createDOMElement(vdom) {
   } else {
     // 根据 type 创建真实 DOM
     return createDOMElementFromNativeComponent(vdom);
+  }
+}
+
+/**
+ * 获取虚拟DOM对应的真是DOM
+ * @param {*} vdom
+ */
+export function getDOMElementByVdom(vdom) {
+  if (isUndefiend(vdom)) return null;
+
+  let { type } = vdom;
+
+  // 如果虚拟 DOM 的类型 type 是函数
+  if (typeof type === 'function') {
+    // 如果是类组件的话
+    if (type.isReactComponent) {
+      // 递归查找
+      return getDOMElementByVdom(vdom.classInstance.oldRenderVdom);
+    } else {
+      // 函数组件
+      return getDOMElementByVdom(vdom.oldRenderVdom);
+    }
+  } else {
+    // 原生 dom 节点 可以直接获取属性
+    return vdom.domElement;
   }
 }
 

@@ -1,5 +1,5 @@
 import { wrapToVdom } from './util';
-import { createDOMElement } from './react-dom/client';
+import { createDOMElement, getDOMElementByVdom } from './react-dom/client';
 
 /**
  * 创建 React 元素也就是虚拟DOM的工厂方法
@@ -8,7 +8,7 @@ import { createDOMElement } from './react-dom/client';
  * @param {*} children 儿子们
  */
 function createElement(type, config, children) {
-  console.log(type, config, children);
+  // console.log(type, config, children);
 
   // 1. 创建 props 对象
   const props = { ...config };
@@ -37,14 +37,21 @@ class Component {
     this.props = props;
   }
 
-  setState(partialState) {
+  setState(partialState, callback) {
+    // 判断 partialState 函数执行,传入老状态
+    const newState =
+      typeof partialState === 'function'
+        ? partialState(this.state)
+        : partialState;
     // 合并新老状态
     this.state = {
       ...this.state,
-      ...partialState,
+      ...newState,
     };
 
     this.forceUpdate();
+    // 在组件更新之后执行回调函数
+    callback();
   }
 
   forceUpdate() {
@@ -52,8 +59,11 @@ class Component {
     const renderVdom = this.render();
     // 创建真实 DOM
     const newDOMElement = createDOMElement(renderVdom);
+
     // 替换掉老的真实 DOM, 需要老的 DOM 和 DOM 父节点
-    const oldDOMElement = this.oldRenderVdom.domElement;
+    // const oldDOMElement = this.oldRenderVdom.domElement;
+    const oldDOMElement = getDOMElementByVdom(this.oldRenderVdom);
+
     // 获取父节点
     const parentDOM = oldDOMElement.parentNode;
     // 替换新节点

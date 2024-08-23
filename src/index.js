@@ -1,5 +1,14 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
+import React from './react';
+import ReactDOM from './react-dom/client';
+
+function ChildCounter(props) {
+  return (
+    <button onClick={props.handleClick}>
+      {props.title}
+      {props.number}
+    </button>
+  );
+}
 
 class Counter extends React.Component {
   constructor(props) {
@@ -15,17 +24,34 @@ class Counter extends React.Component {
 
   handleClick = () => {
     // 组件更新的时候只需要传递变更的属性即可,不需要变更的属性,不需要传递,会保留原来的值
-    this.setState({
-      number: this.state.number + 1,
-    });
+    // this.setState({
+    //   number: this.state.number + 1,
+    // });
+
+    // setState 参数可以是一个对象,也可以是一个函数,
+    this.setState(
+      (prevState) => ({
+        number: prevState.number + 1,
+      }),
+      () => {
+        console.log('State updated!', this.state.number);
+      }
+    );
   };
 
   render() {
+    // return (
+    //   <button onClick={this.handleClick}>
+    //     {this.state.title}
+    //     {this.state.number}
+    //   </button>
+    // );
     return (
-      <button onClick={this.handleClick}>
-        {this.state.title}
-        {this.state.number}
-      </button>
+      <ChildCounter
+        handleClick={this.handleClick}
+        title={this.state.title}
+        number={this.state.number}
+      />
     );
   }
 }
