@@ -165,7 +165,7 @@ export function createDOMElement(vdom) {
 }
 
 /**
- * 获取虚拟DOM对应的真是DOM
+ * 获取虚拟DOM对应的真实DOM
  * @param {*} vdom
  */
 export function getDOMElementByVdom(vdom) {
@@ -175,9 +175,8 @@ export function getDOMElementByVdom(vdom) {
 
   // 如果虚拟 DOM 的类型 type 是函数
   if (typeof type === 'function') {
-    // 如果是类组件的话
+    // 如果是类组件的话 (递归处理)
     if (type.isReactComponent) {
-      // 递归查找
       return getDOMElementByVdom(vdom.classInstance.oldRenderVdom);
     } else {
       // 函数组件

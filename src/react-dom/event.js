@@ -1,3 +1,5 @@
+import { setIsBatchingUpdates, flushDirtyComponents } from '../react';
+
 // 定义一个事件类型的方法字典
 const eventTypeMethods = {
   click: {
@@ -93,6 +95,10 @@ export function setupEventDelegation(container) {
           // 遍历所有的 DOM 元素,执行它身上的 React 事件监听函数
           // 拼出来方法名 onClick onClickCapture
           const methodName = eventTypeMethods[eventType][phase];
+
+          // 在执行事件处理器之前先把批量更新打开
+          setIsBatchingUpdates(true);
+
           for (let element of elements) {
             // 如果某个方法执行的时候, 已经调用 stopPropagation() 则阻止
             if (syntheticEvent.isPropagationStopped()) {
@@ -101,6 +107,9 @@ export function setupEventDelegation(container) {
             // 如果此 dom 节点上绑定有回调函数, 则执行它
             element.reactEvents?.[methodName]?.(syntheticEvent);
           }
+
+          // 等事件处理器完成之后，进行实际的更新
+          flushDirtyComponents();
         },
         phase === 'capture'
       );
