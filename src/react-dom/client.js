@@ -48,9 +48,11 @@ function createDOMElementFromTextComponent(vdom) {
  * @returns dom
  */
 function createDOMElementFromClassComponent(vdom) {
-  const { type, props } = vdom;
+  const { type, props, ref } = vdom;
   // 类组件，把属性传递给类组件的构造函数，
   const classInstance = new type(props);
+  // 根据类组件的定义创建类组件的实例后
+  if (ref) ref.current = classInstance;
   // 让类组件的虚拟DOM的 classInstance
   vdom.classInstance = classInstance;
   // 调用实例上的 render 方法返回要渲染的虚拟 DOM
@@ -83,10 +85,12 @@ function createDOMElementFromFunctionComponent(vdom) {
  * @returns
  */
 function createDOMElementFromNativeComponent(vdom) {
-  const { type, props } = vdom;
+  const { type, props, ref } = vdom;
 
   // 先根据类型创建真实 DOM
   const domElement = document.createElement(type);
+  // 如果 ref 有值的话，把真实的 DOM 元素赋给 ref.current
+  if (ref) ref.current = domElement;
   // 根据属性更新 dom
   updateProps(domElement, {}, props);
   // 挂载子节点

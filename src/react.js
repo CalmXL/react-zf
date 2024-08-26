@@ -34,7 +34,8 @@ export function flushDirtyComponents() {
  */
 function createElement(type, config, children) {
   // 1. 创建 props 对象
-  const props = { ...config };
+  // const props = { ...config };
+  const { ref, ...props } = config;
 
   // 2. 如果参数数量大于三个，说明不止一个儿子
   if (arguments.length > 3) {
@@ -46,6 +47,7 @@ function createElement(type, config, children) {
 
   return {
     type,
+    ref,
     props,
   };
 }
@@ -131,8 +133,15 @@ class Component {
   }
 }
 
+function createRef() {
+  return {
+    current: null,
+  };
+}
+
 const React = {
   createElement,
+  createRef,
   Component,
 };
 
