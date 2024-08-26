@@ -2,42 +2,50 @@ import React from './react';
 import ReactDOM from './react-dom/client';
 
 /**
- * React.forwardRef 允许你将 ref 从父组件传递子组件
+ * React 类组件的生命周期:
+ * 1. 挂载 mounting 挂载的钩子会在组件创建并插入到 DOM 之后调用
+ *    constructor 组件的构造函数,最先被调用, 用于初始化组件状态
+ *    ^componentWillMount 将要挂载, React 18 被废弃了
+ *    render 计算将要渲染的虚拟 DOM, 不能调用 setState,不可以存在副作用
+ *    componentDidMount 组件渲染到真实DOM 之后触发,
+ *
+ * 2. 更新 updating
+ * 3. 卸载 unmounting
  */
 
-function ChildComponent(props, forwardRef) {
-  return <input ref={forwardRef} />;
-}
+class Counter extends React.Component {
+  // 1. setup 初始化 props 和 state
+  constructor(props) {
+    super(props);
+    this.state = { number: 0 };
+    console.log('counter 1.constructor');
+  }
 
-// 可以把函数组件传递给 forwardRef, 它会返回新组建,可以接收 ref
-// 在你需要再子组件内部访问 dom 节点时使用
-// forwardRef 可以接收一个函数的渲染函数,返回一个新组件, 该函数可以接收 ref
-const ForwardComponent = React.forwardRef(ChildComponent);
-console.log(ForwardComponent);
-/**
- * $$typeof: Symbol(react.forward_ref)
- * render: ƒ ChildComponent(props, forwardRef)
- */
+  componentWillMount() {
+    console.log('counter 2. componentWillMount');
+  }
 
-class ParentComponent extends React.Component {
-  // Warning: Function components cannot be given refs. 不能给函数组件传递 refs
-  // Attempts to access this ref will fail. 尝试访问此 ref 将会失败
-  // Did you mean to use React.forwardRef()? 你是否意味使用 forwardRef
-  inputRef = React.createRef();
+  componentDidMount() {
+    console.log('counter 4. componentDidMount');
+  }
 
   handleClick = () => {
-    this.inputRef.current.focus();
+    this.setState({
+      number: this.state.number + 1,
+    });
   };
 
   render() {
+    console.log('counter 3. render');
+
     return (
       <div>
-        <ForwardComponent ref={this.inputRef} />
-        <button onClick={this.handleClick}>focus</button>
+        <p>{this.state.number}</p>
+        <button onClick={this.handleClick}>+</button>
       </div>
     );
   }
 }
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(<ParentComponent />);
+root.render(<Counter />);

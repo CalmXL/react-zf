@@ -30,6 +30,8 @@ function mountVdom(rootVdom, container) {
   if (!domElement) return;
   // 将真实虚拟dom转换为真实DOM， 挂载到 根容器上
   container.appendChild(domElement);
+  // 此时 dom 元素已经挂载完毕
+  domElement.componentDidMount?.();
 }
 
 /**
@@ -51,6 +53,8 @@ function createDOMElementFromClassComponent(vdom) {
   const { type, props, ref } = vdom;
   // 类组件，把属性传递给类组件的构造函数，
   const classInstance = new type(props);
+  // 组件将要挂载
+  classInstance.componentWillMount?.();
   // 根据类组件的定义创建类组件的实例后
   if (ref) ref.current = classInstance;
   // 让类组件的虚拟DOM的 classInstance
@@ -60,7 +64,13 @@ function createDOMElementFromClassComponent(vdom) {
   // 让类的实例的 oldRenderVdom 属性指向它调用的renderVdom
   classInstance.oldRenderVdom = renderVdom;
   // 把虚拟DOM 传递给 createDOMElement 返回真实 DOM
-  return createDOMElement(renderVdom);
+  // 此处只是生成得到真实 DOM, 但此时真实 DOM还没有挂载到页面中, 还没挂载到父节点
+  const domElement = createDOMElement(renderVdom);
+  // 不确定 DOM 元素什么时候插入,因此先暂存在 DOM 元素上,等真正挂载完毕
+  if (classInstance.componentDidMount) {
+    domElement.componentDidMount = classInstance.componentDidMount;
+  }
+  return domElement;
 }
 
 /**
