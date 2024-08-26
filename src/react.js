@@ -1,5 +1,6 @@
 import { wrapToVdom } from './util';
 import { createDOMElement, getDOMElementByVdom } from './react-dom/client';
+import { REACT_FORWARD_REF } from './constant';
 
 // 定义一个变量，用于控制当前是否处于批量更新模式
 let isBatchingUpdates = false;
@@ -139,10 +140,22 @@ function createRef() {
   };
 }
 
+/**
+ * 转发 ref, 可以实现 ref 的转发, 可以接收 ref, 并且转发
+ * @param {*} render 组件的渲染函数
+ */
+function forwardRef(render) {
+  return {
+    $$typeof: REACT_FORWARD_REF,
+    render,
+  };
+}
+
 const React = {
+  Component,
   createElement,
   createRef,
-  Component,
+  forwardRef,
 };
 
 export default React;

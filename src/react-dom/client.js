@@ -1,4 +1,4 @@
-import { REACT_TEXT } from '../constant';
+import { REACT_FORWARD_REF, REACT_TEXT } from '../constant';
 import { isUndefiend, isDefined, wrapToArray } from '../util';
 import { setupEventDelegation } from './event';
 
@@ -80,6 +80,21 @@ function createDOMElementFromFunctionComponent(vdom) {
 }
 
 /**
+ * 处理 React.forwardRef 包裹的组件
+ * @param {*} vdom
+ * @returns
+ */
+function createReactForwardDOMElement(vdom) {
+  // type = {$$typeof, render} render 其实就是分发的函数组件
+  const { type, props, ref } = vdom;
+  // 把自己接收的属性和 ref 作为参数传递
+  const renderVdom = type.render(props, ref);
+
+  vdom.oldRenderVdom = renderVdom;
+  return createDOMElement(renderVdom);
+}
+
+/**
  * 创建真实DOM,并挂载属性和子节点
  * @param {*} vdom
  * @returns
@@ -154,6 +169,9 @@ export function createDOMElement(vdom) {
   // 虚拟dom 为文本
   if (type === REACT_TEXT) {
     return createDOMElementFromTextComponent(vdom);
+  } else if (type.$$typeof === REACT_FORWARD_REF) {
+    // 转发的函数组件
+    return createReactForwardDOMElement(vdom);
   } else if (typeof type === 'function') {
     if (type.isReactComponent) {
       // 类组件
