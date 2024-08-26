@@ -20,7 +20,7 @@ export function setIsBatchingUpdates(value) {
  */
 export function flushDirtyComponents() {
   dirtyComponents.forEach((component) => {
-    component.forceUpdate();
+    component.updateIfNeeded();
   });
   dirtyComponents.clear();
   isBatchingUpdates = false;
@@ -63,6 +63,8 @@ class Component {
     this.props = props;
     // 保存需要但是还没有生效的更新
     this.pendingStates = [];
+    // 用来存新属性
+    this.nextProps = null;
   }
 
   setState(partialState, callback) {
@@ -83,7 +85,7 @@ class Component {
         ...newState,
       };
 
-      this.forceUpdate();
+      this.updateIfNeeded();
       // 在组件更新之后执行回调函数
       callback && callback();
     }
@@ -110,11 +112,29 @@ class Component {
     return state;
   };
 
+  // 如果必要的话更新
+  updateIfNeeded() {
+    // 先计算新状态
+    const nextState = this.accumulateState();
+    // 现在没有处理子组件的更新,当父组件传递给子组件给子组件的属性更新后,子组件也要更新
+    // 调用 shouldComponentUpdate 计算是否要更新,
+    const shouldUpdate = this.shouldComponentUpdate?.(
+      this.nextProps,
+      nextState
+    );
+    // 不管要不要重新渲染组件, this.state 都要赋值新状态
+    this.state = nextState;
+    if (!shouldUpdate) return;
+    this.forceUpdate();
+  }
+
   forceUpdate() {
     // 在重新渲染之前，先更新最新的状态
-    if (this.pendingStates.length !== 0) {
-      this.state = this.accumulateState();
-    }
+    // if (this.pendingStates.length !== 0) {
+    //   this.state = this.accumulateState();
+    // }
+
+    this.componentWillUpdate?.();
 
     // 重新调用 render 方法,计算新的虚拟 DOM, 再创建新的真实DOM,替换老的
     const renderVdom = this.render();
@@ -131,6 +151,9 @@ class Component {
     parentDOM.replaceChild(newDOMElement, oldDOMElement);
     // 最后更新 oldRenderVdom
     this.oldRenderVdom = renderVdom;
+
+    // 更新完成后调用 didUpdate
+    this.componentDidUpdate?.(this.props, this.state);
   }
 }
 
