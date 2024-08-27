@@ -15,8 +15,47 @@ import ReactDOM from './react-dom/client';
  *    componentWillUpdate 组件将要更新
  *    render 重新计算 虚拟 DOM
  *    componentDidUpdate 在更新之后立刻调用
+ *
+ *    当组件的属性发生变化的时候也会进入更新流程
+ *
  * 3. 卸载 unmounting
+ *    当组件从 DOM 中移除的时候会调用
+ *    componentWillUnmount 在组件卸载及销毁前直接调用，可以在此进行一些列操作
  */
+
+class ChildCounter extends React.Component {
+  componentWillMount() {
+    console.log('ChildCount 1.componentWillComponent');
+  }
+
+  constructor(props) {
+    super(props);
+  }
+
+  componentDidMount() {
+    console.log('ChildCount 3.componentDidMount');
+  }
+
+  // 子组件收到父组件传递过来的新属性
+  componentWillReceiveProps() {
+    console.log('ChildCount 4.componentWillReceiveProps');
+  }
+
+  shouldComponentUpdate(nextProps, nextState) {
+    console.log('ChildCount 5.shouldComponentUpdate');
+    return nextProps.count % 3 === 0;
+  }
+
+  componentWillUnmount() {
+    console.log('ChildCount 6.componentWillUnmount');
+  }
+
+  render() {
+    console.log('ChildCount 2.render');
+
+    return <div>{this.props.count}</div>;
+  }
+}
 
 class Counter extends React.Component {
   // 1. setup 初始化 props 和 state
@@ -59,6 +98,9 @@ class Counter extends React.Component {
     return (
       <div>
         <p>{this.state.number}</p>
+        {this.state.number === 4 ? null : (
+          <ChildCounter count={this.state.number} />
+        )}
         <button onClick={this.handleClick}>+</button>
       </div>
     );
@@ -67,3 +109,11 @@ class Counter extends React.Component {
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(<Counter />);
+
+/**
+  counter 1.constructor
+  counter 2.componentWillMount
+  counter 3.render
+  ChildCount 1.componentWillComponent
+  ChildCount 2.render
+ */
