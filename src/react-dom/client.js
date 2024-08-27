@@ -220,6 +220,35 @@ export function getDOMElementByVdom(vdom) {
   }
 }
 
+/**
+ * 进行深度 DOM-DIFF
+ * @param {*} parentDOM 真实的父 DOM, oldVdom 对应的真实DOM的父节点
+ * @param {*} oldVdom   上一次 render 渲染出来的虚拟 DOM
+ * @param {*} newVdom   最新的 render 渲染出来的虚拟 DOM
+ */
+export function compareVdom(parentDOM, oldVdom, newVdom) {
+  // 新旧都为空, 不处理
+  if (isUndefiend(oldVdom) && isUndefiend(newVdom)) return;
+
+  // 老的存在,新的不存在
+  if (isDefined(oldVdom) && isUndefiend(newVdom)) {
+    // TODO 卸载老节点
+  } else if (isUndefiend(oldVdom) && isDefined(newVdom)) {
+    // 新的存在,旧的不存在,
+    // TODO 创建新的并插入新的节点
+    parentDOM.appendChild(createDOMElement(newVdom));
+  } else if (
+    isDefined(oldVdom) &&
+    isDefined(newVdom) &&
+    newVdom.type !== oldVdom.type
+  ) {
+    // TODO 卸载老的.插入新的
+  } else {
+    // 新旧存在 type 一样
+    // TODO 深入对比节点
+  }
+}
+
 const ReactDOM = {
   createRoot,
 };

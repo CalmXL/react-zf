@@ -1,5 +1,9 @@
 import { wrapToVdom } from './util';
-import { createDOMElement, getDOMElementByVdom } from './react-dom/client';
+import {
+  createDOMElement,
+  getDOMElementByVdom,
+  compareVdom,
+} from './react-dom/client';
 import { REACT_FORWARD_REF } from './constant';
 
 // 定义一个变量，用于控制当前是否处于批量更新模式
@@ -138,8 +142,6 @@ class Component {
 
     // 重新调用 render 方法,计算新的虚拟 DOM, 再创建新的真实DOM,替换老的
     const renderVdom = this.render();
-    // 创建真实 DOM
-    const newDOMElement = createDOMElement(renderVdom);
 
     // 替换掉老的真实 DOM, 需要老的 DOM 和 DOM 父节点
     // const oldDOMElement = this.oldRenderVdom.domElement;
@@ -147,8 +149,11 @@ class Component {
 
     // 获取父节点
     const parentDOM = oldDOMElement.parentNode;
-    // 替换新节点
-    parentDOM.replaceChild(newDOMElement, oldDOMElement);
+
+    // 现在不在将 新DOM 直接替换 旧的 DOM, 需要进行 DOM Diff
+    // 比较新旧虚拟dom, 找出最小的差异，以最小的代价更新真实DOM
+    compareVdom(parentDOM, this.oldRenderVdom, renderVdom);
+
     // 最后更新 oldRenderVdom
     this.oldRenderVdom = renderVdom;
 

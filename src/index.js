@@ -1,5 +1,5 @@
-import React from './react';
-import ReactDOM from './react-dom/client';
+import React from 'react';
+import ReactDOM from 'react-dom/client';
 
 /**
  * React 类组件的生命周期:
@@ -24,12 +24,12 @@ import ReactDOM from './react-dom/client';
  */
 
 class ChildCounter extends React.Component {
-  componentWillMount() {
-    console.log('ChildCount 1.componentWillComponent');
-  }
-
   constructor(props) {
     super(props);
+  }
+
+  componentWillMount() {
+    console.log('ChildCount 1.componentWillMount');
   }
 
   componentDidMount() {
@@ -110,10 +110,46 @@ class Counter extends React.Component {
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(<Counter />);
 
-/**
-  counter 1.constructor
-  counter 2.componentWillMount
-  counter 3.render
+/*
+
+counter 1.constructor
+counter 2.componentWillMount
+counter 3.render
   ChildCount 1.componentWillComponent
   ChildCount 2.render
- */
+  ChildCount 3.componentDidMount
+counter 4.componentDidMount
+
+*% 第一次 click 
+counter 5.shouldComponentUpdate
+
+*% 第二次 click
+counter 5.shouldComponentUpdate
+counter 6.componentWillUpdate
+counter 3.render
+ChildCount 4.componentWillReceiveProps
+ChildCount 5.shouldComponentUpdate
+counter 7.componentDidUpdate
+
+*% 第三次 click
+counter 5.shouldComponentUpdate
+
+*% 第四次 click
+counter 5.shouldComponentUpdate
+counter 6.componentWillUpdate
+counter 3.render
+ChildCount 6.componentWillUnmount
+counter 7.componentDidUpdate
+
+*% 第五次 click
+counter 5.shouldComponentUpdate
+
+*% 第六次 click
+counter 5.shouldComponentUpdate
+counter 6.componentWillUpdate
+counter 3.render
+ChildCount 1.componentWillMount
+ChildCount 2.render
+ChildCount 3.componentDidMount
+counter 7.componentDidUpdate
+*/
