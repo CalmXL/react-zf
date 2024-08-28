@@ -357,7 +357,7 @@ export function compareVdom(parentDOM, oldVdom, newVdom) {
   } else if (isUndefiend(oldVdom) && isDefined(newVdom)) {
     // 新的存在,旧的不存在,
     // 创建新的并插入新的节点
-    mountVdom(parentDOM, newVdom);
+    mountVdom(newVdom, parentDOM);
     // let newDOMElement = createDOMElement(newVdom);
     // parentDOM.appendChild(newDOMElement);
     // newDOMElement.componentDidMount?.();
