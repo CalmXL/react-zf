@@ -1,10 +1,5 @@
 import { wrapToVdom } from './util';
-import {
-  createDOMElement,
-  getDOMElementByVdom,
-  compareVdom,
-  getParentDOMByVdom,
-} from './react-dom/client';
+import { compareVdom, getParentDOMByVdom } from './react-dom/client';
 import { REACT_FORWARD_REF } from './constant';
 
 // 定义一个变量，用于控制当前是否处于批量更新模式
@@ -32,7 +27,7 @@ export function flushDirtyComponents() {
 }
 
 /**
- * 创建 React 元素也就是虚拟DOM的工厂方法
+ * * 创建 React 元素也就是虚拟DOM的工厂方法
  * 该方法会由 babel 调用解析 jsx
  * @param {*} type DOM 的类型
  * @param {*} config 配置对象
@@ -40,7 +35,6 @@ export function flushDirtyComponents() {
  */
 function createElement(type, config, children) {
   // 1. 创建 props 对象
-  // const props = { ...config };
   const { ref, ...props } = config;
 
   // 2. 如果参数数量大于三个，说明不止一个儿子
@@ -60,7 +54,7 @@ function createElement(type, config, children) {
 
 // 在 ES6 中类其实是一个语法糖，本质上也还是一个函数
 class Component {
-  // 给类组件的类型添加一个静态属性
+  // 给类组件的类型添加一个静态属性, 用来表示该组件为类组件
   static isReactComponent = true;
 
   constructor(props) {
@@ -146,22 +140,13 @@ class Component {
   }
 
   forceUpdate() {
-    // 在重新渲染之前，先更新最新的状态
-    // if (this.pendingStates.length !== 0) {
-    //   this.state = this.accumulateState();
-    // }
-
     this.componentWillUpdate?.();
 
     // 重新调用 render 方法,计算新的虚拟 DOM, 再创建新的真实DOM,替换老的
     const renderVdom = this.render();
-
-    // 替换掉老的真实 DOM, 需要老的 DOM 和 DOM 父节点
-    // const oldDOMElement = this.oldRenderVdom.domElement;
-    // const oldDOMElement = getDOMElementByVdom(this.oldRenderVdom);
+    console.log(this);
 
     // 获取父节点
-    // const parentDOM = oldDOMElement.parentNode;
     const parentDOM = getParentDOMByVdom(this.oldRenderVdom);
 
     // 现在不在将 新DOM 直接替换 旧的 DOM, 需要进行 DOM Diff

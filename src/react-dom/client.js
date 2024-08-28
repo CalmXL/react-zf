@@ -3,7 +3,7 @@ import { isUndefiend, isDefined, wrapToArray } from '../util';
 import { setupEventDelegation } from './event';
 
 /**
- * 创建 DOM 容器
+ * * 创建 DOM 容器
  * @param {*} container
  * @returns 返回一个 render 方法用于绑定视图
  */
@@ -11,7 +11,6 @@ function createRoot(container) {
   return {
     render(rootVdom) {
       mountVdom(rootVdom, container);
-
       // 设置事件代理
       setupEventDelegation(container);
     },
@@ -19,7 +18,7 @@ function createRoot(container) {
 }
 
 /**
- *
+ * * 将虚拟DOM -> DOM 挂载
  * @param {*} rootVdom 虚拟 dom
  * @param {*} container 根容器
  * @returns
@@ -35,7 +34,7 @@ function mountVdom(rootVdom, container) {
 }
 
 /**
- * 创建文本节点
+ * * 创建文本节点
  * @param {*} vdom
  * @returns
  */
@@ -47,7 +46,7 @@ function createDOMElementFromTextComponent(vdom) {
 }
 
 /**
- * 类组件 -> dom
+ * * 类组件 -> dom
  * @param {*} vdom
  * @returns dom
  */
@@ -69,7 +68,7 @@ function createDOMElementFromClassComponent(vdom) {
   // 此处只是生成得到真实 DOM, 但此时真实 DOM还没有挂载到页面中, 还没挂载到父节点
   const domElement = createDOMElement(renderVdom);
   // 不确定 DOM 元素什么时候插入,因此先暂存在 DOM 元素上,等真正挂载完毕
-  // & 真实 DOM 只能调用 componentDidMount
+  // 真实 DOM 只能调用 componentDidMount
   if (classInstance.componentDidMount) {
     domElement.componentDidMount = classInstance.componentDidMount;
   }
@@ -77,7 +76,7 @@ function createDOMElementFromClassComponent(vdom) {
 }
 
 /**
- * 函数组件 -> dom
+ * * 函数组件 -> dom
  * @param {*} vdom
  * @returns
  */
@@ -93,7 +92,7 @@ function createDOMElementFromFunctionComponent(vdom) {
 }
 
 /**
- * 处理 React.forwardRef 包裹的组件
+ * * 处理 React.forwardRef 包裹的组件
  * @param {*} vdom
  * @returns
  */
@@ -108,7 +107,7 @@ function createReactForwardDOMElement(vdom) {
 }
 
 /**
- * 创建真实DOM,并挂载属性和子节点
+ * * 创建真实DOM,并挂载属性和子节点
  * @param {*} vdom
  * @returns
  */
@@ -129,7 +128,7 @@ function createDOMElementFromNativeComponent(vdom) {
 }
 
 /**
- * 挂载子节点
+ * * 挂载子节点
  * @param {*} vdom
  * @param {*} domElement
  */
@@ -143,7 +142,7 @@ function mountChildren(vdom, domElement) {
 }
 
 /**
- * 根据属性更新dom
+ * * 根据属性更新dom
  * @param {*} domElement  真是 DOM
  * @param {*} oldProps    老属性
  * @param {*} newProps    新属性
@@ -167,6 +166,7 @@ function updateProps(domElement, oldProps = {}, newProps) {
     }
   });
 
+  // 更新属性
   Object.keys(newProps).forEach((name) => {
     if (name === 'children') {
       return;
@@ -194,12 +194,8 @@ function updateProps(domElement, oldProps = {}, newProps) {
  * @return 真实 DOM
  */
 export function createDOMElement(vdom) {
-  console.log(vdom);
-
   if (isUndefiend(vdom)) return null;
-  const { type, props } = vdom;
-  console.log(type);
-
+  const { type } = vdom;
   // 虚拟dom 为文本
   if (type === REACT_TEXT) {
     return createDOMElementFromTextComponent(vdom);
