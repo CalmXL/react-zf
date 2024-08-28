@@ -41,7 +41,9 @@ function mountVdom(rootVdom, container) {
  */
 function createDOMElementFromTextComponent(vdom) {
   const { props } = vdom;
-  return document.createTextNode(props);
+  const domElement = document.createTextNode(props);
+  vdom.domElement = domElement;
+  return domElement;
 }
 
 /**
@@ -67,6 +69,7 @@ function createDOMElementFromClassComponent(vdom) {
   // 此处只是生成得到真实 DOM, 但此时真实 DOM还没有挂载到页面中, 还没挂载到父节点
   const domElement = createDOMElement(renderVdom);
   // 不确定 DOM 元素什么时候插入,因此先暂存在 DOM 元素上,等真正挂载完毕
+  // & 真实 DOM 只能调用 componentDidMount
   if (classInstance.componentDidMount) {
     domElement.componentDidMount = classInstance.componentDidMount;
   }
@@ -146,6 +149,24 @@ function mountChildren(vdom, domElement) {
  * @param {*} newProps    新属性
  */
 function updateProps(domElement, oldProps = {}, newProps) {
+  // 如果一个属性在老的属性里存在，新的属性里不存在，则删除
+  Object.keys(oldProps).forEach((name) => {
+    // 如果新的对象中没有此属性了
+    if (!newProps.hasOwnProperty(name)) {
+      // 清空原来的行内样式
+      if (name === 'style') {
+        Object.keys(oldProps.style).forEach((styleProp) => {
+          domElement.style[styleProp] = null;
+        });
+      } else if (name.startsWith('on')) {
+        delete domElement.reactEvents[name];
+      } else if (name === 'children') {
+      } else {
+        delete domElement[name];
+      }
+    }
+  });
+
   Object.keys(newProps).forEach((name) => {
     if (name === 'children') {
       return;
@@ -173,13 +194,16 @@ function updateProps(domElement, oldProps = {}, newProps) {
  * @return 真实 DOM
  */
 export function createDOMElement(vdom) {
+  console.log(vdom);
+
   if (isUndefiend(vdom)) return null;
   const { type, props } = vdom;
+  console.log(type);
 
   // 虚拟dom 为文本
   if (type === REACT_TEXT) {
     return createDOMElementFromTextComponent(vdom);
-  } else if (type.$$typeof === REACT_FORWARD_REF) {
+  } else if (type?.$$typeof === REACT_FORWARD_REF) {
     // 转发的函数组件
     return createReactForwardDOMElement(vdom);
   } else if (typeof type === 'function') {
@@ -221,6 +245,103 @@ export function getDOMElementByVdom(vdom) {
 }
 
 /**
+ * 获取 vdom 的父节点
+ * @param {*} vdom
+ * @returns
+ */
+export function getParentDOMByVdom(vdom) {
+  return getDOMElementByVdom(vdom)?.parentNode;
+}
+
+export function unMountVdom(vdom) {
+  if (isUndefiend(vdom)) return;
+  const { ref } = vdom;
+  // 递归卸载子节点
+  wrapToArray(vdom.props.children).forEach(unMountVdom);
+  // 获取此虚拟 DOM 对应的真实 DOM
+  getDOMElementByVdom(vdom)?.remove();
+  // 如果是类组件，并且实例上还有组件将要卸载的函数，则执行它
+  vdom.classInstance?.componentWillUnmount?.();
+  // 把 ref 的 current 重置为 null
+  if (ref) ref.current = null;
+}
+
+/**
+ * * 更新虚拟 DOM
+ * @param {*} oldVdom
+ * @param {*} newVdom
+ */
+function updateVdom(oldVdom, newVdom) {
+  const { type } = oldVdom;
+  // 如果这是一个转发的 ref
+  if (type.$$typeof === REACT_FORWARD_REF) {
+    return updateReactForwardComponent(oldVdom, newVdom);
+  } else if (type === REACT_TEXT) {
+    // 文本节点
+    return updateReactTextComponent(oldVdom, newVdom);
+  } else if (typeof type === 'string') {
+    // 普通的原生节点
+    return updateNativeComponent(oldVdom, newVdom);
+  } else if (typeof type === 'function') {
+    if (type.isReactComponent) {
+      return updateClassComponent(oldVdom, newVdom);
+    } else {
+      return updateFunctionComponent(oldVdom, newVdom);
+    }
+  }
+}
+
+function updateClassComponent(oldVdom, newVdom) {
+  // 复用类组件的实例
+  const classInstance = (newVdom.classInstance = oldVdom.classInstance);
+  // 类组件的父组件更新了，向子组件传递新的属性
+  classInstance.componentWillReceiveProps(newVdom?.props);
+  // 触发子组件的更新
+  classInstance.emitUpdate(newVdom.props);
+}
+
+function updateFunctionComponent(oldVdom, newVdom) {
+  const { type, props } = newVdom;
+  const renderVdom = type(props);
+  compareVdom(getDOMElementByVdom(oldVdom), oldVdom.oldRenderVdom, renderVdom);
+  newVdom.oldRenderVdom = renderVdom;
+}
+
+function updateReactForwardComponent(oldVdom, newVdom) {
+  const { type, props, ref } = newVdom;
+  // 重新执行函数组件的渲染函数，得到渲染的虚拟 DOM
+  const renderVdom = type.render(props, ref);
+  const parentDOM = getParentDOMByVdom(oldVdom);
+  compareVdom(parentDOM, oldVdom.oldRenderVdom, renderVdom);
+}
+
+function updateReactTextComponent(oldVdom, newVdom) {
+  // 先获取老的文本节点的真实 DOM, 然后传递给 newVdom.domElement, 会赋值给 domElement
+  let domElement = (newVdom.domElement = getDOMElementByVdom(oldVdom));
+  if (oldVdom.props !== newVdom.props) {
+    domElement.textContent = newVdom.props;
+  }
+}
+
+function updateNativeComponent(oldVdom, newVdom) {
+  let domElement = (newVdom.domElement = getDOMElementByVdom(oldVdom));
+  // 根据旧的属性对象更新新的属性对象
+  updateProps(domElement, oldVdom.props, newVdom.props);
+  updateChildren(domElement, oldVdom.props.children, newVdom.props.children);
+}
+
+function updateChildren(parentDOM, oldVChildren, newVChildren) {
+  oldVChildren = wrapToArray(oldVChildren);
+  newVChildren = wrapToArray(newVChildren);
+
+  // 获取新旧子节点的最大长度
+  const maxLength = Math.max(oldVChildren.length, newVChildren.length);
+  for (let i = 0; i < maxLength; i++) {
+    compareVdom(parentDOM, oldVChildren[i], newVChildren[i]);
+  }
+}
+
+/**
  * 进行深度 DOM-DIFF
  * @param {*} parentDOM 真实的父 DOM, oldVdom 对应的真实DOM的父节点
  * @param {*} oldVdom   上一次 render 渲染出来的虚拟 DOM
@@ -232,20 +353,26 @@ export function compareVdom(parentDOM, oldVdom, newVdom) {
 
   // 老的存在,新的不存在
   if (isDefined(oldVdom) && isUndefiend(newVdom)) {
-    // TODO 卸载老节点
+    unMountVdom(oldVdom);
   } else if (isUndefiend(oldVdom) && isDefined(newVdom)) {
     // 新的存在,旧的不存在,
-    // TODO 创建新的并插入新的节点
-    parentDOM.appendChild(createDOMElement(newVdom));
+    // 创建新的并插入新的节点
+    mountVdom(parentDOM, newVdom);
+    // let newDOMElement = createDOMElement(newVdom);
+    // parentDOM.appendChild(newDOMElement);
+    // newDOMElement.componentDidMount?.();
   } else if (
     isDefined(oldVdom) &&
     isDefined(newVdom) &&
     newVdom.type !== oldVdom.type
   ) {
-    // TODO 卸载老的.插入新的
+    // 卸载老的.插入新的
+    unMountVdom(oldVdom);
+    mountVdom(parentDOM, newVdom);
   } else {
     // 新旧存在 type 一样
-    // TODO 深入对比节点
+    // 深入对比节点
+    updateVdom(oldVdom, newVdom);
   }
 }
 

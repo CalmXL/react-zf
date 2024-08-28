@@ -3,6 +3,7 @@ import {
   createDOMElement,
   getDOMElementByVdom,
   compareVdom,
+  getParentDOMByVdom,
 } from './react-dom/client';
 import { REACT_FORWARD_REF } from './constant';
 
@@ -128,8 +129,20 @@ class Component {
     );
     // 不管要不要重新渲染组件, this.state 都要赋值新状态
     this.state = nextState;
+    if (this.props) {
+      this.props = this.nextProps;
+      this.nextProps = null;
+    }
     if (!shouldUpdate) return;
     this.forceUpdate();
+  }
+
+  emitUpdate(nextProps) {
+    this.nextProps = nextProps; // 暂存新属性对象
+    // 如果有新的属性和待更新的状态的话，就进行试图更新的逻辑
+    if (this.nextProps || this.pendingStates.length > 0) {
+      this.updateIfNeeded();
+    }
   }
 
   forceUpdate() {
@@ -145,10 +158,11 @@ class Component {
 
     // 替换掉老的真实 DOM, 需要老的 DOM 和 DOM 父节点
     // const oldDOMElement = this.oldRenderVdom.domElement;
-    const oldDOMElement = getDOMElementByVdom(this.oldRenderVdom);
+    // const oldDOMElement = getDOMElementByVdom(this.oldRenderVdom);
 
     // 获取父节点
-    const parentDOM = oldDOMElement.parentNode;
+    // const parentDOM = oldDOMElement.parentNode;
+    const parentDOM = getParentDOMByVdom(this.oldRenderVdom);
 
     // 现在不在将 新DOM 直接替换 旧的 DOM, 需要进行 DOM Diff
     // 比较新旧虚拟dom, 找出最小的差异，以最小的代价更新真实DOM

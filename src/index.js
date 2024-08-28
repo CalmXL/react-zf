@@ -1,11 +1,11 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
+import React from './react';
+import ReactDOM from './react-dom/client';
 
 /**
  * React 类组件的生命周期:
  * 1. 挂载 mounting 挂载的钩子会在组件创建并插入到 DOM 之后调用
  *    constructor 组件的构造函数,最先被调用, 用于初始化组件状态
- *    ^componentWillMount 将要挂载, React 18 被废弃了
+ *    componentWillMount 将要挂载, React 18 被废弃了
  *    render 计算将要渲染的虚拟 DOM, 不能调用 setState,不可以存在副作用
  *    componentDidMount 组件渲染到真实DOM 之后触发,
  *
