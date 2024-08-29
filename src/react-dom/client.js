@@ -62,7 +62,7 @@ function createDOMElementFromClassComponent(vdom) {
   classInstance.componentWillMount?.();
   // 根据类组件的定义创建类组件的实例后
   if (ref) ref.current = classInstance;
-  // 让类组件的虚拟DOM的 classInstance
+  // 虚拟dom.classInstance 挂载 类的实例, 用于后续触发生命周期函数，以及派发更新
   vdom.classInstance = classInstance;
   // 调用实例上的 render 方法返回要渲染的虚拟 DOM
   const renderVdom = classInstance.render();
@@ -239,6 +239,7 @@ export function getDOMElementByVdom(vdom) {
       return getDOMElementByVdom(vdom.oldRenderVdom);
     }
   } else {
+    // TODO 这里用来返回真实DOM节点
     // 原生 dom 节点 可以直接获取属性
     return vdom.domElement;
   }
