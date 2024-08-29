@@ -116,7 +116,7 @@ class Component {
     // 先计算新状态
     const nextState = this.accumulateState();
     // 现在没有处理子组件的更新,当父组件传递给子组件给子组件的属性更新后,子组件也要更新
-    // 调用 shouldComponentUpdate 计算是否要更新,
+    // 调用 shouldComponentUpdate 计算是否要更新
     const shouldUpdate = this.shouldComponentUpdate?.(
       this.nextProps,
       nextState
@@ -144,7 +144,6 @@ class Component {
 
     // 重新调用 render 方法,计算新的虚拟 DOM, 再创建新的真实DOM,替换老的
     const renderVdom = this.render();
-    console.log(this);
 
     // 获取父节点
     const parentDOM = getParentDOMByVdom(this.oldRenderVdom);

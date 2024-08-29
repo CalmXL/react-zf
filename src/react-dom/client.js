@@ -23,12 +23,16 @@ function createRoot(container) {
  * @param {*} container 根容器
  * @returns
  */
-function mountVdom(rootVdom, container) {
+function mountVdom(vdom, container, nextDOMElement) {
   // 虚拟DOM -> 真实DOM
-  const domElement = createDOMElement(rootVdom);
+  const domElement = createDOMElement(vdom);
   if (!domElement) return;
-  // 将真实虚拟dom转换为真实DOM， 挂载到 根容器上
-  container.appendChild(domElement);
+  // 将真实虚拟dom转换为真实DOM，重新挂载
+  if (nextDOMElement) {
+    container.insertBefore(domElement, nextDOMElement);
+  } else {
+    container.appendChild(domElement);
+  }
   // 此时 dom 元素已经挂载完毕
   domElement.componentDidMount?.();
 }
@@ -217,7 +221,7 @@ export function createDOMElement(vdom) {
 }
 
 /**
- * 获取虚拟DOM对应的真实DOM
+ * * 获取虚拟DOM对应的真实DOM
  * @param {*} vdom
  */
 export function getDOMElementByVdom(vdom) {
@@ -241,7 +245,7 @@ export function getDOMElementByVdom(vdom) {
 }
 
 /**
- * 获取 vdom 的父节点
+ * * 获取 vdom 的父节点
  * @param {*} vdom
  * @returns
  */
@@ -287,6 +291,11 @@ function updateVdom(oldVdom, newVdom) {
   }
 }
 
+/**
+ * * 更新类组件
+ * @param {*} oldVdom
+ * @param {*} newVdom
+ */
 function updateClassComponent(oldVdom, newVdom) {
   // 复用类组件的实例
   const classInstance = (newVdom.classInstance = oldVdom.classInstance);
@@ -296,6 +305,11 @@ function updateClassComponent(oldVdom, newVdom) {
   classInstance.emitUpdate(newVdom.props);
 }
 
+/**
+ * * 更新函数组件
+ * @param {*} oldVdom
+ * @param {*} newVdom
+ */
 function updateFunctionComponent(oldVdom, newVdom) {
   const { type, props } = newVdom;
   const renderVdom = type(props);
@@ -333,7 +347,20 @@ function updateChildren(parentDOM, oldVChildren, newVChildren) {
   // 获取新旧子节点的最大长度
   const maxLength = Math.max(oldVChildren.length, newVChildren.length);
   for (let i = 0; i < maxLength; i++) {
-    compareVdom(parentDOM, oldVChildren[i], newVChildren[i]);
+    const nextDOMElement = getNextVdom(oldVChildren, i);
+    compareVdom(parentDOM, oldVChildren[i], newVChildren[i], nextDOMElement);
+  }
+}
+
+/**
+ * * 查找 startIndex 后面的第一个真实节点
+ * @param {*} vChildren
+ * @param {*} startIndex
+ */
+function getNextVdom(vChildren, startIndex) {
+  for (let i = startIndex + 1; i < vChildren.length; i++) {
+    let domElement = getDOMElementByVdom(vChildren[i]);
+    if (domElement) return domElement;
   }
 }
 
@@ -343,7 +370,7 @@ function updateChildren(parentDOM, oldVChildren, newVChildren) {
  * @param {*} oldVdom   上一次 render 渲染出来的虚拟 DOM
  * @param {*} newVdom   最新的 render 渲染出来的虚拟 DOM
  */
-export function compareVdom(parentDOM, oldVdom, newVdom) {
+export function compareVdom(parentDOM, oldVdom, newVdom, nextDOMElement) {
   // 新旧都为空, 不处理
   if (isUndefiend(oldVdom) && isUndefiend(newVdom)) return;
 
@@ -353,10 +380,7 @@ export function compareVdom(parentDOM, oldVdom, newVdom) {
   } else if (isUndefiend(oldVdom) && isDefined(newVdom)) {
     // 新的存在,旧的不存在,
     // 创建新的并插入新的节点
-    mountVdom(newVdom, parentDOM);
-    // let newDOMElement = createDOMElement(newVdom);
-    // parentDOM.appendChild(newDOMElement);
-    // newDOMElement.componentDidMount?.();
+    mountVdom(newVdom, parentDOM, nextDOMElement);
   } else if (
     isDefined(oldVdom) &&
     isDefined(newVdom) &&
@@ -364,7 +388,7 @@ export function compareVdom(parentDOM, oldVdom, newVdom) {
   ) {
     // 卸载老的.插入新的
     unMountVdom(oldVdom);
-    mountVdom(parentDOM, newVdom);
+    mountVdom(parentDOM, newVdom, nextDOMElement);
   } else {
     // 新旧存在 type 一样
     // 深入对比节点
